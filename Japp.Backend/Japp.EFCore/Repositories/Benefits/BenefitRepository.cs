@@ -31,9 +31,7 @@ namespace Japp.EFCore.Repositories.Benefits
         
         public async Task DeleteBenefit(int id)
         {
-            var benefit = await GetBenefit(id);
-
-            await _unitOfWork.Delete(benefit);
+            await _unitOfWork.Delete(await GetBenefit(id));
         }
 
         public async Task<List<Benefit>> GetBenefits(Params<BenefitFilterParamsDto> @params)
