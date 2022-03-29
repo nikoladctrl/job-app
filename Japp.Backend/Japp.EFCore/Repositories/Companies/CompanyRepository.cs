@@ -6,40 +6,38 @@ using Japp.Core.DTOs.Company;
 using Japp.Core.Entities;
 using Japp.Core.Helpers;
 using Japp.EFCore.Context;
+using Japp.EFCore.UnitOfWork;
 using Microsoft.EntityFrameworkCore;
 
 namespace Japp.EFCore.Repositories.Companies
 {
-    public class CompanyRepository : ICompanyRepository
+    public class CompanyRepository : BaseRepository<Company>, ICompanyRepository
     {
-        private readonly DataContext _context;
-        public CompanyRepository(DataContext context)
+        private readonly IUnitOfWork<Company> _unitOfWork;
+        public CompanyRepository(DataContext context, IUnitOfWork<Company> unitOfWork) : base(context)
         {
-            _context = context;
+            _unitOfWork = unitOfWork;
         }
 
         public async Task<Company> CreateCompany(Company company)
         {
-            _context.Companies.Add(company);
-            await _context.SaveChangesAsync();
+            var newCompany = await _unitOfWork.Add(company);
 
-            return await GetCompany(company.Id);
+            return await GetCompany(newCompany.Id);
         }
 
         public async Task<Company> UpdateCompany(Company company)
         {
-            _context.Companies.Update(company);
-            await _context.SaveChangesAsync();
+            var updatedCompany = await _unitOfWork.Update(company);
 
-            return await GetCompany(company.Id);
+            return await GetCompany(updatedCompany.Id);
         }
 
         public async Task DeleteCompany(int id)
         {
             var company = await GetCompany(id);
 
-            _context.Remove(company);
-            await _context.SaveChangesAsync();
+            await _unitOfWork.Delete(company);
         }
 
         public async Task<PaginationResult<Company, CompanyFilterParamsDto>> GetCompanies(Params<CompanyFilterParamsDto> @params)
@@ -104,6 +102,5 @@ namespace Japp.EFCore.Repositories.Companies
                     .Take(size)
                     .AsSingleQuery();
         }
-
     }
 }

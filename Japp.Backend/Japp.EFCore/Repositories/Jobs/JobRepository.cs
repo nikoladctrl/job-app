@@ -6,40 +6,38 @@ using Japp.Core.DTOs.Job;
 using Japp.Core.Entities;
 using Japp.Core.Helpers;
 using Japp.EFCore.Context;
+using Japp.EFCore.UnitOfWork;
 using Microsoft.EntityFrameworkCore;
 
 namespace Japp.EFCore.Repositories.Jobs
 {
-    public class JobRepository : IJobRepository
+    public class JobRepository : BaseRepository<Job>, IJobRepository
     {
-        private readonly DataContext _context;
-        public JobRepository(DataContext context)
+        private readonly IUnitOfWork<Job> _unitOfWork;
+        public JobRepository(DataContext context, IUnitOfWork<Job> unitOfWork) : base(context)
         {
-            _context = context;
+            _unitOfWork = unitOfWork;            
         }
 
         public async Task<Job> CreateJob(Job job)
         {
-            _context.Jobs.Add(job);
-            await _context.SaveChangesAsync();
+            var newJob = await _unitOfWork.Add(job);
 
-            return await GetJob(job.Id);
+            return await GetJob(newJob.Id);
         }
 
         public async Task<Job> UpdateJob(Job job)
         {
-            _context.Jobs.Update(job);
-            await _context.SaveChangesAsync();
+            var updatedJob = await _unitOfWork.Update(job);
 
-            return await GetJob(job.Id);
+            return await GetJob(updatedJob.Id);
         }
 
         public async Task DeleteJob(int id)
         {
             var job = await GetJob(id);
 
-            _context.Jobs.Remove(job);
-            await _context.SaveChangesAsync();
+            await _unitOfWork.Delete(job);
         }
 
         public async Task<PaginationResult<Job, JobFilterParamsDto>> GetJobs(Params<JobFilterParamsDto> @params)

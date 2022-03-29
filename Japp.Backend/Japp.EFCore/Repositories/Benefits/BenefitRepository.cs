@@ -6,40 +6,34 @@ using Japp.Core.DTOs.Benefit;
 using Japp.Core.Entities;
 using Japp.Core.Helpers;
 using Japp.EFCore.Context;
+using Japp.EFCore.UnitOfWork;
 using Microsoft.EntityFrameworkCore;
 
 namespace Japp.EFCore.Repositories.Benefits
 {
-    public class BenefitRepository : IBenefitRepository
+    public class BenefitRepository : BaseRepository<Benefit>, IBenefitRepository
     {
-        private readonly DataContext _context;
-        public BenefitRepository(DataContext context)
+        private readonly IUnitOfWork<Benefit> _unitOfWork;
+        public BenefitRepository(DataContext context, IUnitOfWork<Benefit> unitOfWork) : base(context)
         {
-            _context = context;
+            _unitOfWork = unitOfWork;
         }
 
         public async Task<Benefit> CreateBenefit(Benefit benefit)
         {
-            _context.Benefits.Add(benefit);
-            await _context.SaveChangesAsync();
-
-            return benefit;
+            return await _unitOfWork.Add(benefit);
         }
 
         public async Task<Benefit> UpdateBenefit(Benefit benefit)
         {
-            _context.Benefits.Update(benefit);
-            await _context.SaveChangesAsync();
-
-            return benefit;
+            return await _unitOfWork.Update(benefit);
         }
         
         public async Task DeleteBenefit(int id)
         {
             var benefit = await GetBenefit(id);
-            _context.Benefits.Remove(benefit);
 
-            await _context.SaveChangesAsync();
+            await _unitOfWork.Delete(benefit);
         }
 
         public async Task<List<Benefit>> GetBenefits(Params<BenefitFilterParamsDto> @params)

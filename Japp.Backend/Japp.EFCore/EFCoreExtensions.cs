@@ -5,6 +5,7 @@ using Japp.EFCore.Repositories.Benefits;
 using Japp.EFCore.Repositories.Comments;
 using Japp.EFCore.Repositories.Companies;
 using Japp.EFCore.Repositories.Jobs;
+using Japp.EFCore.UnitOfWork;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -24,6 +25,7 @@ namespace Japp.EFCore
                     .AddEntityFrameworkStores<DataContext>()
                     .AddDefaultTokenProviders();
 
+            services.AddTransient(typeof(IUnitOfWork<>), typeof(UnitOfWork<>));
             services.AddScoped<IBenefitRepository, BenefitRepository>();
             services.AddScoped<ICompanyRepository, CompanyRepository>();
             services.AddScoped<ICommentRepository, CommentRepository>();

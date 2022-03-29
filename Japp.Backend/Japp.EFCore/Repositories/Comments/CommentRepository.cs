@@ -6,40 +6,38 @@ using Japp.Core.DTOs.Comment;
 using Japp.Core.Entities;
 using Japp.Core.Helpers;
 using Japp.EFCore.Context;
+using Japp.EFCore.UnitOfWork;
 using Microsoft.EntityFrameworkCore;
 
 namespace Japp.EFCore.Repositories.Comments
 {
-    public class CommentRepository : ICommentRepository
+    public class CommentRepository : BaseRepository<Comment>, ICommentRepository
     {
-        private readonly DataContext _context;
-        public CommentRepository(DataContext context)
+        private readonly IUnitOfWork<Comment> _unitOfWork;
+        public CommentRepository(DataContext context, IUnitOfWork<Comment> unitOfWork) : base(context)
         {
-            _context = context;
+            _unitOfWork = unitOfWork;            
         }
 
         public async Task<Comment> CreateComment(Comment comment)
         {
-            _context.Comments.Add(comment);
-            await _context.SaveChangesAsync();
+            var newComment = await _unitOfWork.Add(comment);
 
-            return await GetComment(comment.Id);
+            return await GetComment(newComment.Id);
         }
 
         public async Task<Comment> UpdateComment(Comment comment)
         {
-            _context.Comments.Add(comment);
-            await _context.SaveChangesAsync();
+            var updatedComment = await _unitOfWork.Update(comment);
 
-            return await GetComment(comment.Id);
+            return await GetComment(updatedComment.Id);
         }
 
         public async Task DeleteComment(int id)
         {
             var comment = await GetComment(id);
 
-            _context.Comments.Remove(comment);
-            await _context.SaveChangesAsync();
+            await _unitOfWork.Delete(comment);
         }
 
         public async Task<PaginationResult<Comment, CommentFilterParamsDto>> GetComments(Params<CommentFilterParamsDto> @params)
